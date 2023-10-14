@@ -235,15 +235,6 @@ def genetic_algorithm(f, bounds, bounds2, n, crossover_rate, mutation_rate, tol,
     # plt.ioff()
     # plt.show()
     plt.figure()
-    for k in range(n):
-        x = [i for i in range(iteration-1)] 
-        y = [local_best_val[j][k]/10 for j in range(iteration-1)]
-        # x = np.append(np.array(start[0]),np.append(x,goal[0]))
-        # y = np.append(np.array(start[1]),np.append(y,goal[1]))
-        plt.plot(x, y, color=f"#{random.randint(0, 0xFFFFFF):06x}" )
-    plt.xlabel('fitness_values')
-    plt.ylabel('iteration')
-    plt.show()
     print("Tìm kiếm hoàn thành!")
     print("Độ dài đường đi tối ưu: " + str(global_best_val))
     print("Đường đi tối ưu UAV1: " + str(global_best))
@@ -346,51 +337,54 @@ def evaluate_fitness(paths):
             distance = sqrt((paths[1][i][0]-paths[1][i-1][0])**2 + (paths[1][i][1]-paths[1][i-1][1])**2)
             line2[i]=calculate_slope_intercept(paths[1][i-1],paths[1][i])
             tg2[i]=distance/paths[1][i][2]+tg2[i-1]
-    isCollided=0
+    isCollided1=0
+    isCollided2=0
     i=1
     while i <= num_points:
         if (not check_segment(np.array([paths[0][i-1][0],paths[0][i-1][1]]),np.array([paths[0][i][0],paths[0][i][1]])) or map[paths[0][i][0],paths[0][i][1]] == 255):
-            isCollided+=1
+            isCollided1+=1
         i += 1
     if (not check_segment(np.array([paths[0][-1][0],paths[0][-1][1]]),np.array([goal[0],goal[1]])) or map[paths[0][-1][0],paths[0][-1][1]] == 255):
-        isCollided+=1
+        isCollided1+=1
     i=1
     while i <= num_points:
         if (not check_segment(np.array([paths[1][i-1][0],paths[1][i-1][1]]),np.array([paths[1][i][0],paths[1][i][1]])) or map[paths[1][i][0],paths[1][i][1]] == 255):
-            isCollided+=1
+            isCollided2+=1
         i += 1
     if (not check_segment(np.array([paths[1][-1][0],paths[1][-1][1]]),np.array([goal2[0],goal2[1]])) or map[paths[1][-1][0],paths[1][-1][1]] == 255):
-        isCollided+=1  
+        isCollided2+=1  
 
     if (not check_crosses_UAV(paths[0],line,start,goal,tg,paths[1],line2,start2,goal2,tg2)):
-        isCollided+=1
+        isCollided1+=1
+        isCollided2+=1
 
     x=paths[0]
     y=paths[1]
-    total_time = 0
+    total_time1 = 0
+    total_time2 =0
     distance=0
     total_distance = 0
     distance=sqrt((x[1][0]-x[0][0])**2 + (x[1][1]-x[0][1])**2)
     total_distance+=distance
-    total_time += distance/x[0][2]
+    total_time1 += distance/x[0][2]
     distance=sqrt((goal[0]-x[-1][0])**2 + (goal[1]-x[-1][1])**2)
     total_distance+=distance
-    total_time += distance/x[-1][2]
+    total_time1 += distance/x[-1][2]
     distance=sqrt((y[1][0]-y[0][0])**2 + (y[1][1]-y[0][1])**2)
     total_distance+=distance
-    total_time += distance/y[0][2]
+    total_time2 += distance/y[0][2]
     distance = sqrt((goal2[0]-x[-1][0])**2 + (goal2[1]-y[-1][1])**2)
     total_distance+=distance
-    total_time += distance/y[-1][2]
+    total_time2 += distance/y[-1][2]
     for i in range(len(x)):
         if(i>1):
             distance=sqrt((x[i][0]-x[i-1][0])**2 + (x[i][1]-x[i-1][1])**2)
             total_distance+=distance
-            total_time += distance/x[i-1][2]
+            total_time1 += distance/x[i-1][2]
             distance=sqrt((y[i][0]-y[i-1][0])**2 + (y[i][1]-y[i-1][1])**2)
             total_distance+=distance
-            total_time += distance/y[i-1][2]
-    return total_time + isCollided*1000
+            total_time2 += distance/y[i-1][2]
+    return total_time1+total_time2+ (total_time1*isCollided1+total_time2*isCollided2)*5
 
 #calculate Calculate coordinates over time
 def coordinates_over_time(path,lines,start,goal,tg,t):
